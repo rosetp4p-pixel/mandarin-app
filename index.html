@@ -115,6 +115,43 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .done-sub{font-size:14px;color:var(--text2);margin-bottom:20px}
 .reminder-toast{position:fixed;bottom:20px;left:16px;right:16px;background:#1a1a1a;color:#fff;padding:14px 16px;border-radius:var(--radius);font-size:14px;z-index:999;display:none;animation:slideUp .3s}
 @keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+/* AUDIO PLAYLIST */
+.audio-player{text-align:center;padding:8px 0}
+.audio-char-big{font-size:80px;line-height:1.1;margin-bottom:8px;transition:opacity .3s}
+.audio-pinyin-big{font-size:22px;color:var(--text2);margin-bottom:4px}
+.audio-meaning-big{font-size:18px;color:var(--text);margin-bottom:16px}
+.audio-controls{display:flex;align-items:center;justify-content:center;gap:16px;margin:16px 0}
+.audio-ctrl-btn{width:48px;height:48px;border-radius:50%;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text)}
+.audio-ctrl-btn:active{background:var(--bg3)}
+.audio-play-btn{width:64px;height:64px;border-radius:50%;background:var(--green);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff}
+.audio-play-btn:active{background:#0F6E56}
+.audio-ctrl-btn svg,.audio-play-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.speed-row{display:flex;gap:6px;justify-content:center;margin-bottom:12px}
+.speed-btn{font-size:12px;padding:4px 10px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer}
+.speed-btn.active{background:var(--green);color:#fff;border-color:var(--green)}
+.audio-progress{width:100%;height:4px;background:var(--border);border-radius:2px;margin:12px 0;overflow:hidden}
+.audio-progress-fill{height:100%;background:var(--green);border-radius:2px;transition:width .5s linear}
+.listen-mode-toggle{display:flex;gap:0;margin-bottom:16px;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+.listen-mode-btn{flex:1;padding:10px;border:none;background:var(--bg);color:var(--text2);font-size:13px;cursor:pointer;font-weight:500}
+.listen-mode-btn.active{background:var(--green);color:#fff}
+/* SPEAK TAB */
+.speak-word-display{text-align:center;padding:16px 0}
+.speak-char{font-size:64px;line-height:1.1;margin-bottom:6px}
+.speak-pinyin{font-size:20px;color:var(--text2);margin-bottom:4px}
+.speak-english{font-size:16px;color:var(--text3);margin-bottom:20px}
+.mic-btn{width:80px;height:80px;border-radius:50%;background:var(--green);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;transition:background .2s,transform .1s}
+.mic-btn.listening{background:#a32d2d;animation:pulse 1s infinite}
+.mic-btn:active{transform:scale(0.95)}
+.mic-btn svg{width:32px;height:32px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(163,45,45,0.4)}50%{box-shadow:0 0 0 12px rgba(163,45,45,0)}}
+.speak-result{background:var(--bg2);border-radius:var(--radius);padding:16px;margin-bottom:12px;text-align:center}
+.speak-result-label{font-size:12px;color:var(--text3);margin-bottom:4px}
+.speak-result-text{font-size:18px;font-weight:500}
+.speak-score-bar{display:flex;gap:8px;margin-top:12px;justify-content:center}
+.speak-score-item{text-align:center}
+.speak-score-num{font-size:24px;font-weight:600;color:var(--green)}
+.speak-score-lbl{font-size:11px;color:var(--text3)}
+.no-speech-note{font-size:12px;color:var(--text3);text-align:center;margin-top:8px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -143,6 +180,10 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
   <button onclick="showTab('listen',this)">
     <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
     Listen
+  </button>
+  <button onclick="showTab('speak',this)">
+    <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+    Speak
   </button>
   <button onclick="showTab('phrases',this)">
     <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
@@ -196,21 +237,94 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 
 <!-- LISTENING TAB -->
 <div id="tab-listen" class="tab">
-  <div class="progress-bar"><div class="progress-fill" id="listen-prog" style="width:0%"></div></div>
-  <div class="listen-char-reveal" id="listen-reveal">
-    <div class="listen-icon">🔊</div>
+  <div class="listen-mode-toggle">
+    <button class="listen-mode-btn active" id="lmode-quiz" onclick="setListenMode('quiz')">📝 Quiz — pick the meaning</button>
+    <button class="listen-mode-btn" id="lmode-playlist" onclick="setListenMode('playlist')">▶ Playlist — just listen</button>
   </div>
-  <div style="text-align:center;margin-bottom:12px">
-    <button class="btn btn-primary" style="display:inline-flex;max-width:180px" onclick="playListenWord()">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-      Play again
+
+  <!-- QUIZ MODE -->
+  <div id="listen-quiz-mode">
+    <div class="progress-bar"><div class="progress-fill" id="listen-prog" style="width:0%"></div></div>
+    <div class="listen-char-reveal" id="listen-reveal"><div class="listen-icon">🔊</div></div>
+    <div style="text-align:center;margin-bottom:12px">
+      <button class="btn btn-primary" style="display:inline-flex;max-width:180px" onclick="playListenWord()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        Play again
+      </button>
+    </div>
+    <div class="listen-opts" id="listen-opts"></div>
+    <div class="feedback" id="listen-feedback"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="listen-next-btn" style="display:none" onclick="nextListen()">Next →</button>
+    </div>
+  </div>
+
+  <!-- PLAYLIST MODE -->
+  <div id="listen-playlist-mode" style="display:none">
+    <div class="cat-scroll" id="playlist-cat-scroll"></div>
+    <div class="audio-progress"><div class="audio-progress-fill" id="pl-prog" style="width:0%"></div></div>
+    <div class="audio-player">
+      <div class="audio-char-big" id="pl-char">—</div>
+      <div class="audio-pinyin-big" id="pl-pinyin"></div>
+      <div class="audio-meaning-big" id="pl-meaning"></div>
+    </div>
+    <div class="speed-row">
+      <span style="font-size:12px;color:var(--text3);align-self:center">Speed:</span>
+      <button class="speed-btn" onclick="setSpeed(0.6,this)">Slow</button>
+      <button class="speed-btn active" onclick="setSpeed(0.85,this)">Normal</button>
+      <button class="speed-btn" onclick="setSpeed(1.1,this)">Fast</button>
+    </div>
+    <div class="audio-controls">
+      <button class="audio-ctrl-btn" onclick="plPrev()" aria-label="previous">
+        <svg viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+      </button>
+      <button class="audio-play-btn" id="pl-play-btn" onclick="togglePlaylist()" aria-label="play/pause">
+        <svg id="pl-play-icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </button>
+      <button class="audio-ctrl-btn" onclick="plNext()" aria-label="next">
+        <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+      </button>
+    </div>
+    <p class="counter" id="pl-counter"></p>
+  </div>
+</div>
+
+<!-- SPEAK TAB -->
+<div id="tab-speak" class="tab">
+  <div style="font-size:13px;color:var(--text3);margin-bottom:12px;text-align:center">Say the word out loud in Mandarin</div>
+  <div class="progress-bar"><div class="progress-fill" id="speak-prog" style="width:0%"></div></div>
+  <div class="speak-word-display">
+    <div class="speak-char" id="sp-char"></div>
+    <div class="speak-pinyin" id="sp-pinyin"></div>
+    <div class="speak-english" id="sp-english"></div>
+  </div>
+  <div style="text-align:center;margin-bottom:8px">
+    <button class="btn" style="display:inline-flex;max-width:160px;margin-bottom:12px" onclick="speakDemo()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+      Hear it first
     </button>
   </div>
-  <div class="listen-opts" id="listen-opts"></div>
-  <div class="feedback" id="listen-feedback"></div>
-  <div class="btn-row">
-    <button class="btn btn-primary" id="listen-next-btn" style="display:none" onclick="nextListen()">Next →</button>
+  <button class="mic-btn" id="mic-btn" onclick="toggleMic()" aria-label="start speaking">
+    <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+  </button>
+  <p style="text-align:center;font-size:13px;color:var(--text3);margin-bottom:16px" id="mic-hint">Tap mic and say the word</p>
+  <div class="speak-result" id="speak-result" style="display:none">
+    <div class="speak-result-label">You said:</div>
+    <div class="speak-result-text" id="sp-heard"></div>
+    <div class="feedback" id="speak-feedback" style="margin-top:8px;margin-bottom:0"></div>
   </div>
+  <div class="btn-row" style="margin-top:12px">
+    <button class="btn btn-primary" id="speak-next-btn" style="display:none" onclick="nextSpeak()">Next word →</button>
+  </div>
+  <div class="speak-score-bar">
+    <div class="speak-score-item"><div class="speak-score-num" id="sp-correct">0</div><div class="speak-score-lbl">correct</div></div>
+    <div style="width:1px;background:var(--border);margin:0 12px"></div>
+    <div class="speak-score-item"><div class="speak-score-num" id="sp-total">0</div><div class="speak-score-lbl">attempted</div></div>
+  </div>
+  <div class="no-speech-note" id="no-speech-note" style="display:none">
+    ⚠ Speech recognition is not supported in this browser.<br>Try Chrome on Android for best results.
+  </div>
+  <p class="counter" id="speak-counter"></p>
 </div>
 
 <!-- PHRASEBOOK TAB -->
@@ -476,12 +590,15 @@ function recordStudied(){
 }
 
 function showTab(name,btn){
+  stopPlaylist();
+  stopMic();
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
   if(btn)btn.classList.add('active');
   if(name==='quiz')initQuiz();
-  if(name==='listen')initListen();
+  if(name==='listen'){state.listenMode=state.listenMode||'quiz';setListenMode(state.listenMode);}
+  if(name==='speak')initSpeak();
   if(name==='phrases')renderPhrasebook();
   if(name==='settings')renderSettings();
 }
@@ -666,6 +783,181 @@ function renderPhrasebook(){
     row.innerHTML=`<div class="phrase-info"><div class="phrase-zh">${w.zh}</div><div class="phrase-py">${w.py}</div></div><div class="phrase-en">${w.en}</div><button class="speak-btn" onclick="speak('${w.zh.replace(/'/g,"\\'")}')" aria-label="hear ${w.en}"><svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>`;
     list.appendChild(row);
   });
+}
+
+// LISTEN MODE TOGGLE
+function setListenMode(mode){
+  state.listenMode=mode;
+  document.getElementById('lmode-quiz').classList.toggle('active',mode==='quiz');
+  document.getElementById('lmode-playlist').classList.toggle('active',mode==='playlist');
+  document.getElementById('listen-quiz-mode').style.display=mode==='quiz'?'block':'none';
+  document.getElementById('listen-playlist-mode').style.display=mode==='playlist'?'block':'none';
+  if(mode==='quiz')initListen();
+  if(mode==='playlist')initPlaylist();
+}
+
+// PLAYLIST
+let plState={words:[],idx:0,playing:false,speed:0.85,cat:'All',timer:null};
+function initPlaylist(){
+  plState.words=filteredWords(plState.cat);
+  plState.idx=0;plState.playing=false;
+  buildPlaylistCats();
+  renderPlaylistWord();
+  setPlayIcon(false);
+}
+function buildPlaylistCats(){
+  const el=document.getElementById('playlist-cat-scroll');
+  el.innerHTML='';
+  ['All',...cats].forEach(c=>{
+    const b=document.createElement('button');
+    b.className='cat-btn'+(c===plState.cat?' active':'');
+    b.textContent=c;
+    b.onclick=()=>{plState.cat=c;plState.idx=0;stopPlaylist();buildPlaylistCats();plState.words=filteredWords(c);renderPlaylistWord();};
+    el.appendChild(b);
+  });
+}
+function renderPlaylistWord(){
+  const w=plState.words[plState.idx];
+  if(!w)return;
+  const el=document.getElementById('pl-char');
+  el.style.opacity='0';
+  setTimeout(()=>{
+    document.getElementById('pl-char').textContent=w.zh;
+    document.getElementById('pl-pinyin').textContent=w.py;
+    document.getElementById('pl-meaning').textContent=w.en;
+    el.style.opacity='1';
+  },150);
+  const pct=Math.round(((plState.idx+1)/plState.words.length)*100);
+  document.getElementById('pl-prog').style.width=pct+'%';
+  document.getElementById('pl-counter').textContent=(plState.idx+1)+' / '+plState.words.length;
+}
+function speakPlaylist(){
+  const w=plState.words[plState.idx];
+  if(!w)return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(w.zh);
+  u.lang='zh-CN';u.rate=plState.speed;u.pitch=1;
+  u.onend=()=>{
+    if(!plState.playing)return;
+    plState.timer=setTimeout(()=>{
+      if(!plState.playing)return;
+      plState.idx=(plState.idx+1)%plState.words.length;
+      renderPlaylistWord();
+      setTimeout(speakPlaylist,400);
+    },1800);
+  };
+  speechSynthesis.speak(u);
+  recordStudied();
+}
+function togglePlaylist(){
+  plState.playing=!plState.playing;
+  setPlayIcon(plState.playing);
+  if(plState.playing){speakPlaylist();}
+  else{stopPlaylist();}
+}
+function stopPlaylist(){
+  plState.playing=false;
+  clearTimeout(plState.timer);
+  speechSynthesis.cancel();
+  setPlayIcon(false);
+}
+function setPlayIcon(playing){
+  const icon=document.getElementById('pl-play-icon');
+  if(!icon)return;
+  icon.innerHTML=playing
+    ?'<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'
+    :'<polygon points="5 3 19 12 5 21 5 3"/>';
+}
+function plNext(){stopPlaylist();plState.idx=(plState.idx+1)%plState.words.length;renderPlaylistWord();}
+function plPrev(){stopPlaylist();plState.idx=(plState.idx-1+plState.words.length)%plState.words.length;renderPlaylistWord();}
+function setSpeed(s,btn){
+  plState.speed=s;
+  document.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// SPEAK / PRONUNCIATION
+let spState={words:[],idx:0,correct:0,total:0,recognition:null,listening:false};
+const SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
+function initSpeak(){
+  spState.words=shuffle(vocab);
+  spState.idx=0;spState.correct=0;spState.total=0;
+  renderSpeakWord();
+  updateSpeakScore();
+  if(!SpeechRec){
+    document.getElementById('no-speech-note').style.display='block';
+    document.getElementById('mic-btn').style.opacity='0.4';
+    document.getElementById('mic-btn').style.pointerEvents='none';
+  }
+}
+function renderSpeakWord(){
+  const w=spState.words[spState.idx];
+  document.getElementById('sp-char').textContent=w.zh;
+  document.getElementById('sp-pinyin').textContent=w.py;
+  document.getElementById('sp-english').textContent=w.en;
+  document.getElementById('speak-result').style.display='none';
+  document.getElementById('speak-next-btn').style.display='none';
+  document.getElementById('speak-feedback').textContent='';
+  document.getElementById('speak-feedback').className='feedback';
+  document.getElementById('mic-hint').textContent='Tap mic and say the word';
+  document.getElementById('mic-btn').classList.remove('listening');
+  const pct=Math.round((spState.idx/spState.words.length)*100);
+  document.getElementById('speak-prog').style.width=pct+'%';
+  document.getElementById('speak-counter').textContent=(spState.idx+1)+' / '+spState.words.length;
+}
+function speakDemo(){speak(spState.words[spState.idx].zh);}
+function updateSpeakScore(){
+  document.getElementById('sp-correct').textContent=spState.correct;
+  document.getElementById('sp-total').textContent=spState.total;
+}
+function toggleMic(){
+  if(!SpeechRec)return;
+  if(spState.listening){stopMic();return;}
+  speechSynthesis.cancel();
+  const rec=new SpeechRec();
+  rec.lang='zh-CN';rec.continuous=false;rec.interimResults=false;rec.maxAlternatives=3;
+  spState.recognition=rec;spState.listening=true;
+  document.getElementById('mic-btn').classList.add('listening');
+  document.getElementById('mic-hint').textContent='Listening… speak now';
+  rec.onresult=(e)=>{
+    const results=Array.from(e.results[0]).map(r=>r.transcript.trim());
+    const w=spState.words[spState.idx];
+    const heard=results[0];
+    const match=results.some(r=>r===w.zh||r.includes(w.zh)||w.zh.includes(r));
+    document.getElementById('sp-heard').textContent=heard||'(nothing heard)';
+    document.getElementById('speak-result').style.display='block';
+    spState.total++;
+    if(match){
+      spState.correct++;
+      document.getElementById('speak-feedback').textContent='✓ Great pronunciation!';
+      document.getElementById('speak-feedback').className='feedback ok';
+    }else{
+      document.getElementById('speak-feedback').textContent='✗ Expected: '+w.zh+' ('+w.py+')';
+      document.getElementById('speak-feedback').className='feedback bad';
+    }
+    updateSpeakScore();saveState();recordStudied();
+    document.getElementById('speak-next-btn').style.display='flex';
+    spState.listening=false;
+    document.getElementById('mic-btn').classList.remove('listening');
+    document.getElementById('mic-hint').textContent='Tap mic to try again or go next';
+  };
+  rec.onerror=(e)=>{
+    spState.listening=false;
+    document.getElementById('mic-btn').classList.remove('listening');
+    document.getElementById('mic-hint').textContent=e.error==='no-speech'?'No speech detected — try again':'Error: '+e.error+'. Try again.';
+  };
+  rec.onend=()=>{spState.listening=false;document.getElementById('mic-btn').classList.remove('listening');};
+  rec.start();
+}
+function stopMic(){
+  if(spState.recognition){try{spState.recognition.abort();}catch(e){}}
+  spState.listening=false;
+  const btn=document.getElementById('mic-btn');
+  if(btn)btn.classList.remove('listening');
+}
+function nextSpeak(){
+  spState.idx=(spState.idx+1)%spState.words.length;
+  renderSpeakWord();
 }
 
 // SETTINGS & REMINDERS
