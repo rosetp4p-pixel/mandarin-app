@@ -315,6 +315,10 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
       </button>
     </div>
     <p class="counter" id="pl-counter"></p>
+    <div class="tag-row" id="pl-tag-row">
+      <button class="tag-btn tag-repeat" id="pl-tag-repeat-btn" onclick="togglePlTag('repeat')">🔄 Repeat practice</button>
+      <button class="tag-btn tag-review" id="pl-tag-review-btn" onclick="togglePlTag('review')">📋 For review</button>
+    </div>
   </div>
 </div>
 
@@ -951,17 +955,25 @@ function initPlaylist(){
 function buildPlaylistCats(){
   const el=document.getElementById('playlist-cat-scroll');
   el.innerHTML='';
-  ['All',...cats].forEach(c=>{
+  const labels={'repeat':'🔄 Repeat','review':'📋 Review'};
+  ['All',...cats,'repeat','review'].forEach(c=>{
     const b=document.createElement('button');
     b.className='cat-btn'+(c===plState.cat?' active':'');
-    b.textContent=c;
+    b.textContent=labels[c]||c;
     b.onclick=()=>{plState.cat=c;plState.idx=0;stopPlaylist();buildPlaylistCats();plState.words=filteredWords(c);renderPlaylistWord();};
     el.appendChild(b);
   });
 }
 function renderPlaylistWord(){
   const w=plState.words[plState.idx];
-  if(!w)return;
+  if(!w){
+    document.getElementById('pl-char').textContent='—';
+    document.getElementById('pl-pinyin').textContent='No words tagged yet';
+    document.getElementById('pl-meaning').textContent='';
+    document.getElementById('pl-counter').textContent='0 words';
+    document.getElementById('pl-prog').style.width='0%';
+    return;
+  }
   const el=document.getElementById('pl-char');
   el.style.opacity='0';
   setTimeout(()=>{
@@ -969,10 +981,29 @@ function renderPlaylistWord(){
     document.getElementById('pl-pinyin').textContent=w.py;
     document.getElementById('pl-meaning').textContent=w.en;
     el.style.opacity='1';
+    renderPlTagButtons(w);
   },150);
   const pct=Math.round(((plState.idx+1)/plState.words.length)*100);
   document.getElementById('pl-prog').style.width=pct+'%';
-  document.getElementById('pl-counter').textContent=(plState.idx+1)+' / '+plState.words.length;
+  const catLabel={'repeat':'🔄 Repeat','review':'📋 Review'}[plState.cat]||plState.cat;
+  document.getElementById('pl-counter').textContent=(plState.idx+1)+' / '+plState.words.length+' — '+catLabel;
+}
+function renderPlTagButtons(w){
+  const rb=document.getElementById('pl-tag-repeat-btn');
+  const rvb=document.getElementById('pl-tag-review-btn');
+  if(!rb||!rvb)return;
+  const t=getTag(w);
+  rb.classList.toggle('tagged',t==='repeat');
+  rvb.classList.toggle('tagged',t==='review');
+  rb.textContent=t==='repeat'?'✓ Repeat practice':'🔄 Repeat practice';
+  rvb.textContent=t==='review'?'✓ For review':'📋 For review';
+}
+function togglePlTag(type){
+  const w=plState.words[plState.idx];
+  if(!w)return;
+  if(getTag(w)===type){delete tags[w.zh];}else{tags[w.zh]=type;}
+  saveTags();
+  renderPlTagButtons(w);
 }
 function speakPlaylist(){
   const w=plState.words[plState.idx];
