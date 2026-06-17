@@ -152,6 +152,27 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .speak-score-num{font-size:24px;font-weight:600;color:var(--green)}
 .speak-score-lbl{font-size:11px;color:var(--text3)}
 .no-speech-note{font-size:12px;color:var(--text3);text-align:center;margin-top:8px;line-height:1.5}
+/* TAGS */
+.tag-row{display:flex;gap:8px;justify-content:center;margin:8px 0 4px}
+.tag-btn{flex:1;max-width:170px;padding:9px 10px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;font-weight:500}
+.tag-btn:active{background:var(--bg3)}
+.tag-btn.tag-repeat.tagged{background:#FFF0E6;color:#7A3000;border-color:#E8803A}
+.tag-btn.tag-review.tagged{background:#EEEEFF;color:#2D3BA0;border-color:#6B7DE8}
+@media(prefers-color-scheme:dark){
+  .tag-btn.tag-repeat.tagged{background:#3a1a00;color:#FFB07A;border-color:#E8803A}
+  .tag-btn.tag-review.tagged{background:#1a1e40;color:#9DAAF5;border-color:#6B7DE8}
+}
+.tag-pill{display:inline-block;font-size:11px;padding:1px 7px;border-radius:10px;vertical-align:middle;margin-left:4px}
+.tag-pill.repeat{background:#FFF0E6;color:#7A3000}
+.tag-pill.review{background:#EEEEFF;color:#2D3BA0}
+@media(prefers-color-scheme:dark){
+  .tag-pill.repeat{background:#3a1a00;color:#FFB07A}
+  .tag-pill.review{background:#1a1e40;color:#9DAAF5}
+}
+.tagged-empty{text-align:center;padding:40px 16px;color:var(--text3);font-size:14px;line-height:1.7}
+.phrase-tag-btn{font-size:11px;padding:3px 8px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text3);cursor:pointer;white-space:nowrap;margin-left:4px}
+.phrase-tag-btn.repeat{background:#FFF0E6;color:#7A3000;border-color:#E8803A}
+.phrase-tag-btn.review{background:#EEEEFF;color:#2D3BA0;border-color:#6B7DE8}
 </style>
 </head>
 <body>
@@ -189,6 +210,10 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
     <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
     Words
   </button>
+  <button onclick="showTab('lists',this)">
+    <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    My Lists
+  </button>
   <button onclick="showTab('settings',this)">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     Settings
@@ -206,6 +231,10 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
     <div id="fc-tone"></div>
   </div>
   <p class="hint" id="flash-hint">Tap card to reveal pinyin &amp; meaning</p>
+  <div class="tag-row" id="flash-tag-row" style="display:none">
+    <button class="tag-btn tag-repeat" id="tag-repeat-btn" onclick="toggleTag('repeat')">🔄 Repeat practice</button>
+    <button class="tag-btn tag-review" id="tag-review-btn" onclick="toggleTag('review')">📋 For review</button>
+  </div>
   <div class="btn-row">
     <button class="btn" onclick="speak(currentWord().zh)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
@@ -333,6 +362,15 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
   <div id="phrase-list"></div>
 </div>
 
+<!-- MY LISTS TAB -->
+<div id="tab-lists" class="tab">
+  <div class="listen-mode-toggle" style="margin-bottom:16px">
+    <button class="listen-mode-btn active" id="list-tab-repeat" onclick="setListsTab('repeat')">🔄 Repeat practice</button>
+    <button class="listen-mode-btn" id="list-tab-review" onclick="setListsTab('review')">📋 For review</button>
+  </div>
+  <div id="lists-content"></div>
+</div>
+
 <!-- SETTINGS TAB -->
 <div id="tab-settings" class="tab">
   <div class="card">
@@ -382,6 +420,31 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 </div>
 
 <script>
+// TAGS — stored separately from state
+let tags={};
+function loadTags(){try{tags=JSON.parse(localStorage.getItem('mandarin_tags')||'{}');}catch(e){}}
+function saveTags(){localStorage.setItem('mandarin_tags',JSON.stringify(tags));}
+function getTag(w){return tags[w.zh]||null;}
+function toggleTag(type){
+  const w=currentWord();
+  if(getTag(w)===type){delete tags[w.zh];}
+  else{tags[w.zh]=type;}
+  saveTags();
+  renderTagButtons(w);
+}
+function renderTagButtons(w){
+  const row=document.getElementById('flash-tag-row');
+  const rb=document.getElementById('tag-repeat-btn');
+  const rvb=document.getElementById('tag-review-btn');
+  if(!row||!rb||!rvb)return;
+  row.style.display='flex';
+  const t=getTag(w);
+  rb.classList.toggle('tagged',t==='repeat');
+  rvb.classList.toggle('tagged',t==='review');
+  rb.textContent=t==='repeat'?'✓ Repeat practice':'🔄 Repeat practice';
+  rvb.textContent=t==='review'?'✓ For review':'📋 For review';
+}
+
 const vocab = [
   // Greetings
   {zh:'你好',py:'nǐ hǎo',en:'Hello',cat:'Greetings',tone:3},
@@ -552,7 +615,11 @@ function saveState(){
   }));
 }
 
-function filteredWords(cat){return cat==='All'?vocab:vocab.filter(v=>v.cat===cat);}
+function filteredWords(cat){
+  if(cat==='repeat')return vocab.filter(v=>tags[v.zh]==='repeat');
+  if(cat==='review')return vocab.filter(v=>tags[v.zh]==='review');
+  return cat==='All'?vocab:vocab.filter(v=>v.cat===cat);
+}
 function currentWord(){return filteredWords(state.flashCat)[state.flashIdx];}
 function currentQuizWord(){return state.quizWords[state.quizIdx];}
 function shuffle(arr){return [...arr].sort(()=>Math.random()-.5);}
@@ -600,16 +667,19 @@ function showTab(name,btn){
   if(name==='listen'){state.listenMode=state.listenMode||'quiz';setListenMode(state.listenMode);}
   if(name==='speak')initSpeak();
   if(name==='phrases')renderPhrasebook();
+  if(name==='lists'){setListsTab(listsTab);}
   if(name==='settings')renderSettings();
 }
 
 function buildCatTabs(containerId,current,onSelect){
   const el=document.getElementById(containerId);
   el.innerHTML='';
-  ['All',...cats].forEach(c=>{
+  const allOpts=['All',...cats,'repeat','review'];
+  const labels={'repeat':'🔄 Repeat','review':'📋 Review'};
+  allOpts.forEach(c=>{
     const b=document.createElement('button');
     b.className='cat-btn'+(c===current?' active':'');
-    b.textContent=c;
+    b.textContent=labels[c]||c;
     b.onclick=()=>{state.flashCat=c;state.flashIdx=0;state.flashFlipped=false;buildCatTabs(containerId,c,onSelect);onSelect(c);};
     el.appendChild(b);
   });
@@ -618,20 +688,34 @@ function buildCatTabs(containerId,current,onSelect){
 // FLASHCARDS
 function renderFlashCard(){
   const words=filteredWords(state.flashCat);
-  if(!words.length)return;
+  if(!words.length){
+    document.getElementById('fc-char').textContent='';
+    document.getElementById('fc-tone').innerHTML='';
+    document.getElementById('fc-pinyin').style.display='none';
+    document.getElementById('fc-meaning').style.display='none';
+    document.getElementById('flash-tag-row').style.display='none';
+    document.getElementById('flash-hint').textContent='No words tagged yet. Tag words using the buttons below a card.';
+    document.getElementById('flash-counter').textContent='0 words';
+    document.getElementById('flash-prog').style.width='0%';
+    return;
+  }
   const w=currentWord();
   document.getElementById('fc-char').textContent=w.zh;
   document.getElementById('fc-pinyin').style.display='none';
   document.getElementById('fc-meaning').style.display='none';
   document.getElementById('fc-tone').innerHTML='';
   document.getElementById('flash-hint').textContent='Tap card to reveal pinyin & meaning';
+  document.getElementById('flash-tag-row').style.display='none';
   state.flashFlipped=false;
   const pct=Math.round((state.flashIdx/words.length)*100);
   document.getElementById('flash-prog').style.width=pct+'%';
-  document.getElementById('flash-counter').textContent=(state.flashIdx+1)+' / '+words.length+' — '+state.flashCat;
+  const catLabel={'repeat':'🔄 Repeat','review':'📋 Review'}[state.flashCat]||state.flashCat;
+  document.getElementById('flash-counter').textContent=(state.flashIdx+1)+' / '+words.length+' — '+catLabel;
 }
 function flipCard(){
   if(state.flashFlipped)return;
+  const words=filteredWords(state.flashCat);
+  if(!words.length)return;
   state.flashFlipped=true;
   const w=currentWord();
   const py=document.getElementById('fc-pinyin');
@@ -639,7 +723,8 @@ function flipCard(){
   py.textContent=w.py;py.style.display='block';
   mn.textContent=w.en;mn.style.display='block';
   document.getElementById('fc-tone').innerHTML=`<span class="tone-badge ${toneClass[w.tone]||'t5'}">${toneNames[w.tone]||''}</span>`;
-  document.getElementById('flash-hint').textContent='Tap "Hear" to listen to the pronunciation';
+  document.getElementById('flash-hint').textContent='Tag this word or tap "Hear" to listen';
+  renderTagButtons(w);
   speak(w.zh);
   recordStudied();
 }
@@ -780,9 +865,67 @@ function renderPhrasebook(){
   words.forEach(w=>{
     const row=document.createElement('div');
     row.className='phrase-row';
-    row.innerHTML=`<div class="phrase-info"><div class="phrase-zh">${w.zh}</div><div class="phrase-py">${w.py}</div></div><div class="phrase-en">${w.en}</div><button class="speak-btn" onclick="speak('${w.zh.replace(/'/g,"\\'")}')" aria-label="hear ${w.en}"><svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>`;
+    const t=getTag(w);
+    const tagHtml=t
+      ?`<span class="tag-pill ${t}">${t==='repeat'?'🔄':'📋'}</span>`
+      :'';
+    row.innerHTML=`
+      <div class="phrase-info">
+        <div class="phrase-zh">${w.zh}${tagHtml}</div>
+        <div class="phrase-py">${w.py}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;margin:0 6px">
+        <button class="phrase-tag-btn${t==='repeat'?' repeat':''}" onclick="phraseToggleTag('${w.zh}','repeat',this)">${t==='repeat'?'✓ Repeat':'🔄 Repeat'}</button>
+        <button class="phrase-tag-btn${t==='review'?' review':''}" onclick="phraseToggleTag('${w.zh}','review',this)">${t==='review'?'✓ Review':'📋 Review'}</button>
+      </div>
+      <button class="speak-btn" onclick="speak('${w.zh.replace(/'/g,"\\'")}')" aria-label="hear ${w.en}"><svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>`;
     list.appendChild(row);
   });
+}
+function phraseToggleTag(zh,type,btn){
+  const w=vocab.find(v=>v.zh===zh);
+  if(!w)return;
+  if(tags[zh]===type){delete tags[zh];}else{tags[zh]=type;}
+  saveTags();
+  renderPhrasebook();
+}
+
+// MY LISTS TAB
+let listsTab='repeat';
+function setListsTab(tab){
+  listsTab=tab;
+  document.getElementById('list-tab-repeat').classList.toggle('active',tab==='repeat');
+  document.getElementById('list-tab-review').classList.toggle('active',tab==='review');
+  renderListsContent();
+}
+function renderListsContent(){
+  const words=vocab.filter(v=>tags[v.zh]===listsTab);
+  const el=document.getElementById('lists-content');
+  if(!words.length){
+    el.innerHTML=`<div class="tagged-empty">${listsTab==='repeat'?'🔄':'📋'}<br><br>No words tagged yet.<br>Flip a flashcard or visit the Words tab<br>to tag words for ${listsTab==='repeat'?'repeat practice':'review'}.</div>`;
+    return;
+  }
+  el.innerHTML='';
+  words.forEach(w=>{
+    const row=document.createElement('div');
+    row.className='phrase-row';
+    row.innerHTML=`
+      <div class="phrase-info">
+        <div class="phrase-zh">${w.zh}</div>
+        <div class="phrase-py">${w.py}</div>
+      </div>
+      <div class="phrase-en">${w.en}</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="speak-btn" onclick="speak('${w.zh.replace(/'/g,"\\'")}')" aria-label="hear"><svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></button>
+        <button class="phrase-tag-btn" onclick="removeListTag('${w.zh}')" style="color:#a32d2d;border-color:#f09595">✕</button>
+      </div>`;
+    el.appendChild(row);
+  });
+}
+function removeListTag(zh){
+  delete tags[zh];
+  saveTags();
+  renderListsContent();
 }
 
 // LISTEN MODE TOGGLE
@@ -1034,6 +1177,7 @@ function resetStats(){
 
 // INIT
 loadState();
+loadTags();
 buildCatTabs('flash-cat-scroll',state.flashCat,()=>renderFlashCard());
 renderFlashCard();
 updateScoreDisplay();
