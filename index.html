@@ -417,10 +417,10 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 
       <!-- SCAN IMAGE MODE -->
       <div id="add-scan-mode" style="display:none">
-        <p class="hint" style="margin-bottom:8px;text-align:left">Upload a screenshot or photo with Chinese text. We'll detect the characters — you'll still need to add pinyin & meaning for each one. <span style="color:var(--text3)">(First scan downloads a ~10MB OCR engine — may take a moment.)</span></p>
+        <p class="hint" style="margin-bottom:8px;text-align:left">Upload a screenshot or photo. Works best with rows like <strong>English — 中文 (pinyin)</strong> — we'll detect all three and pre-fill the bulk importer for you to review. <span style="color:var(--text3)">(First scan downloads a ~10MB OCR engine — may take a moment.)</span></p>
         <input class="form-input" type="file" accept="image/*" id="scan-file" onchange="scanImage(event)">
         <div id="scan-status" style="font-size:13px;color:var(--text2);margin-top:8px;text-align:center"></div>
-        <div id="scan-results" style="margin-top:8px;text-align:center"></div>
+        <div id="scan-results" style="margin-top:8px;text-align:left"></div>
       </div>
 
       <p class="hint" style="margin-top:14px">You've added <strong id="custom-count">0</strong> custom word(s).</p>
@@ -1319,31 +1319,64 @@ function scanImage(e){
   status.textContent='Loading OCR engine…';
   loadTesseract(()=>{
     status.textContent='Reading image…';
-    Tesseract.recognize(file,'chi_sim',{
+    Tesseract.recognize(file,'chi_sim+eng',{
       logger:m=>{
         if(m.status==='recognizing text'){status.textContent='Reading image… '+Math.round(m.progress*100)+'%';}
       }
     }).then(({data})=>{
-      const text=data.text||'';
-      const chars=[...new Set(text.replace(/[^一-鿿]/g,'').split(''))];
-      if(!chars.length){
-        status.textContent='No Chinese characters detected. Try a clearer image.';
+      const lines=(data.text||'').split('\n').map(l=>l.trim()).filter(Boolean);
+      const rowRe=/^(.*?)\s*([一-鿿][一-鿿，。！？、\s]*[一-鿿])\s*[\(（]\s*([a-zA-Züāēīōūǎěǐǒǔâêîôûàèìòùǖǘǚǜńň\s\d.,!?']+)\s*[\)）]/i;
+      const parsed=[];
+      const loneChars=[];
+      lines.forEach(line=>{
+        const m=line.match(rowRe);
+        if(m){
+          const en=m[1].replace(/[|*_>~`]/g,'').trim();
+          const zh=m[2].trim();
+          const py=m[3].trim();
+          if(zh&&py)parsed.push({en:en||'(add meaning)',zh,py});
+        }else{
+          const found=line.match(/[一-鿿]/g);
+          if(found)loneChars.push(...found);
+        }
+      });
+      if(!parsed.length&&!loneChars.length){
+        status.textContent='No Chinese text detected. Try a clearer image.';
         return;
       }
-      status.textContent='Detected '+chars.length+' character(s). Tap one to add pinyin & meaning:';
       results.innerHTML='';
-      chars.forEach(c=>{
-        const span=document.createElement('span');
-        span.className='scan-detected-char';
-        span.textContent=c;
-        span.onclick=()=>{
-          setAddTab('single');
-          document.getElementById('add-zh').value=c;
-          document.getElementById('add-py').focus();
-          speak(c);
-        };
-        results.appendChild(span);
-      });
+      if(parsed.length){
+        status.textContent='Detected '+parsed.length+' phrase(s) with English & pinyin! Review in the Bulk paste tab, then Import.';
+        const existing=document.getElementById('bulk-text').value.trim();
+        const bulkLines=parsed.map(p=>p.zh+' | '+p.py+' | '+p.en+' | My words').join('\n');
+        document.getElementById('bulk-text').value=existing?existing+'\n'+bulkLines:bulkLines;
+        results.innerHTML=parsed.map(p=>
+          '<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">'+
+          '<strong>'+p.zh+'</strong> ('+p.py+') — '+p.en+'</div>'
+        ).join('');
+        setTimeout(()=>setAddTab('bulk'),900);
+      }else{
+        status.textContent='Detected characters but couldn\'t match English/pinyin pairs. Tap a character to add it manually:';
+      }
+      if(loneChars.length){
+        const uniq=[...new Set(loneChars)];
+        const wrap=document.createElement('div');
+        wrap.style.marginTop='10px';
+        wrap.innerHTML='<div style="font-size:12px;color:var(--text3);margin-bottom:4px">'+(parsed.length?'Also found '+uniq.length+' unmatched character(s):':'')+'</div>';
+        uniq.forEach(c=>{
+          const span=document.createElement('span');
+          span.className='scan-detected-char';
+          span.textContent=c;
+          span.onclick=()=>{
+            setAddTab('single');
+            document.getElementById('add-zh').value=c;
+            document.getElementById('add-py').focus();
+            speak(c);
+          };
+          wrap.appendChild(span);
+        });
+        results.appendChild(wrap);
+      }
     }).catch(err=>{
       status.textContent='OCR failed: '+err.message;
     });
