@@ -173,6 +173,15 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 .phrase-tag-btn{font-size:11px;padding:3px 8px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text3);cursor:pointer;white-space:nowrap;margin-left:4px}
 .phrase-tag-btn.repeat{background:#FFF0E6;color:#7A3000;border-color:#E8803A}
 .phrase-tag-btn.review{background:#EEEEFF;color:#2D3BA0;border-color:#6B7DE8}
+/* ADD VOCAB PANEL */
+.form-label{display:block;font-size:13px;font-weight:500;margin:10px 0 4px;color:var(--text2)}
+.form-input,.form-select,.form-textarea{width:100%;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:15px;font-family:inherit}
+.form-textarea{resize:vertical;font-family:inherit;line-height:1.5}
+.custom-word-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);gap:8px}
+.scan-detected-char{display:inline-block;font-size:26px;padding:6px 10px;margin:3px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:var(--bg2)}
+.scan-detected-char:active{background:var(--bg3)}
+.add-toggle-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:6px}
+.add-toggle-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 </style>
 </head>
 <body>
@@ -362,6 +371,62 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 
 <!-- PHRASEBOOK TAB -->
 <div id="tab-phrases" class="tab">
+  <div class="card" style="margin-bottom:16px">
+    <button class="btn btn-primary add-toggle-btn" onclick="toggleAddPanel()">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add new vocabulary
+    </button>
+    <div id="add-panel" style="display:none;margin-top:14px">
+      <div class="listen-mode-toggle" style="margin-bottom:12px">
+        <button class="listen-mode-btn active" id="add-tab-single" onclick="setAddTab('single')">✏️ Single</button>
+        <button class="listen-mode-btn" id="add-tab-bulk" onclick="setAddTab('bulk')">📋 Bulk paste</button>
+        <button class="listen-mode-btn" id="add-tab-scan" onclick="setAddTab('scan')">📷 Scan image</button>
+      </div>
+
+      <!-- SINGLE WORD FORM -->
+      <div id="add-single-mode">
+        <label class="form-label" for="add-zh">Chinese characters</label>
+        <input class="form-input" type="text" id="add-zh" placeholder="你好">
+        <label class="form-label" for="add-py">Pinyin</label>
+        <input class="form-input" type="text" id="add-py" placeholder="nǐ hǎo">
+        <label class="form-label" for="add-en">English meaning</label>
+        <input class="form-input" type="text" id="add-en" placeholder="Hello">
+        <label class="form-label" for="add-cat">Category</label>
+        <input class="form-input" type="text" id="add-cat" placeholder="e.g. Greetings" list="cat-datalist">
+        <datalist id="cat-datalist"></datalist>
+        <label class="form-label" for="add-tone">Tone</label>
+        <select class="form-select" id="add-tone">
+          <option value="1">1st tone — flat (ā)</option>
+          <option value="2">2nd tone — rising (á)</option>
+          <option value="3">3rd tone — dip (ǎ)</option>
+          <option value="4">4th tone — falling (à)</option>
+          <option value="5" selected>Neutral tone</option>
+        </select>
+        <button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="addSingleWord()">Add word</button>
+        <div id="add-single-msg" class="feedback" style="margin-top:6px"></div>
+      </div>
+
+      <!-- BULK PASTE MODE -->
+      <div id="add-bulk-mode" style="display:none">
+        <p class="hint" style="margin-bottom:6px;text-align:left">One word per line, separated by <strong>|</strong>:<br><span style="color:var(--text3)">characters | pinyin | meaning | category</span></p>
+        <textarea class="form-textarea" id="bulk-text" rows="6" placeholder="你好 | nǐ hǎo | Hello | Greetings
+谢谢 | xiè xiè | Thank you | Greetings"></textarea>
+        <button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="importBulk()">Import words</button>
+        <div id="bulk-msg" class="feedback" style="margin-top:6px"></div>
+      </div>
+
+      <!-- SCAN IMAGE MODE -->
+      <div id="add-scan-mode" style="display:none">
+        <p class="hint" style="margin-bottom:8px;text-align:left">Upload a screenshot or photo with Chinese text. We'll detect the characters — you'll still need to add pinyin & meaning for each one. <span style="color:var(--text3)">(First scan downloads a ~10MB OCR engine — may take a moment.)</span></p>
+        <input class="form-input" type="file" accept="image/*" id="scan-file" onchange="scanImage(event)">
+        <div id="scan-status" style="font-size:13px;color:var(--text2);margin-top:8px;text-align:center"></div>
+        <div id="scan-results" style="margin-top:8px;text-align:center"></div>
+      </div>
+
+      <p class="hint" style="margin-top:14px">You've added <strong id="custom-count">0</strong> custom word(s).</p>
+      <div id="custom-words-list"></div>
+    </div>
+  </div>
   <div class="cat-scroll" id="phrase-cat-scroll"></div>
   <div id="phrase-list"></div>
 </div>
@@ -449,7 +514,7 @@ function renderTagButtons(w){
   rvb.textContent=t==='review'?'✓ For review':'📋 For review';
 }
 
-const vocab = [
+const builtinVocab = [
   // Greetings
   {zh:'你好',py:'nǐ hǎo',en:'Hello',cat:'Greetings',tone:3},
   {zh:'早上好',py:'zǎo shàng hǎo',en:'Good morning',cat:'Greetings',tone:3},
@@ -594,7 +659,8 @@ const vocab = [
 
 const toneNames={1:'1st tone — flat (ā)',2:'2nd tone — rising (á)',3:'3rd tone — dip (ǎ)',4:'4th tone — falling (à)',5:'Neutral tone'};
 const toneClass={1:'t1',2:'t2',3:'t3',4:'t4',5:'t5'};
-const cats=[...new Set(vocab.map(v=>v.cat))];
+let vocab=[...builtinVocab];
+let cats=[...new Set(vocab.map(v=>v.cat))];
 
 let state={
   flashCat:'All',flashIdx:0,flashFlipped:false,
@@ -1134,6 +1200,156 @@ function nextSpeak(){
   renderSpeakWord();
 }
 
+// CUSTOM VOCABULARY
+let customVocab=[];
+function loadCustomVocab(){
+  try{customVocab=JSON.parse(localStorage.getItem('mandarin_custom_vocab')||'[]');}catch(e){customVocab=[];}
+  rebuildVocab();
+}
+function saveCustomVocab(){localStorage.setItem('mandarin_custom_vocab',JSON.stringify(customVocab));}
+function rebuildVocab(){
+  vocab=[...builtinVocab,...customVocab];
+  cats=[...new Set(vocab.map(v=>v.cat))];
+}
+function refreshAllCatTabs(){
+  if(document.getElementById('tab-flash').classList.contains('active')){
+    buildCatTabs('flash-cat-scroll',state.flashCat,()=>renderFlashCard());
+    renderFlashCard();
+  }
+  renderPhrasebook();
+}
+function toggleAddPanel(){
+  const p=document.getElementById('add-panel');
+  const showing=p.style.display==='block';
+  p.style.display=showing?'none':'block';
+  if(!showing){updateCatDatalist();updateCustomCount();renderCustomWordsList();}
+}
+function setAddTab(tab){
+  ['single','bulk','scan'].forEach(t=>{
+    document.getElementById('add-tab-'+t).classList.toggle('active',t===tab);
+    document.getElementById('add-'+t+'-mode').style.display=t===tab?'block':'none';
+  });
+}
+function updateCatDatalist(){
+  document.getElementById('cat-datalist').innerHTML=cats.map(c=>`<option value="${c}">`).join('');
+}
+function updateCustomCount(){
+  document.getElementById('custom-count').textContent=customVocab.length;
+}
+function renderCustomWordsList(){
+  const el=document.getElementById('custom-words-list');
+  if(!customVocab.length){el.innerHTML='';return;}
+  el.innerHTML=customVocab.map((w,i)=>`
+    <div class="custom-word-row">
+      <div><span style="font-size:18px">${w.zh}</span> <span style="font-size:12px;color:var(--text2)">${w.py} — ${w.en}</span></div>
+      <button class="phrase-tag-btn" style="color:#a32d2d;border-color:#f09595" onclick="deleteCustomWord(${i})">✕</button>
+    </div>`).join('');
+}
+function deleteCustomWord(i){
+  customVocab.splice(i,1);
+  saveCustomVocab();rebuildVocab();
+  updateCustomCount();renderCustomWordsList();
+  refreshAllCatTabs();
+}
+function addSingleWord(){
+  const zh=document.getElementById('add-zh').value.trim();
+  const py=document.getElementById('add-py').value.trim();
+  const en=document.getElementById('add-en').value.trim();
+  const cat=document.getElementById('add-cat').value.trim()||'My words';
+  const tone=parseInt(document.getElementById('add-tone').value,10);
+  const msg=document.getElementById('add-single-msg');
+  if(!zh||!py||!en){
+    msg.textContent='Please fill in Chinese, pinyin, and meaning.';
+    msg.className='feedback bad';
+    return;
+  }
+  if(vocab.some(v=>v.zh===zh)){
+    msg.textContent='That word already exists in your vocabulary.';
+    msg.className='feedback bad';
+    return;
+  }
+  customVocab.push({zh,py,en,cat,tone});
+  saveCustomVocab();rebuildVocab();
+  msg.textContent='✓ Added "'+zh+'"!';
+  msg.className='feedback ok';
+  document.getElementById('add-zh').value='';
+  document.getElementById('add-py').value='';
+  document.getElementById('add-en').value='';
+  document.getElementById('add-cat').value='';
+  updateCatDatalist();updateCustomCount();renderCustomWordsList();
+  refreshAllCatTabs();
+}
+function importBulk(){
+  const text=document.getElementById('bulk-text').value;
+  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
+  let added=0,skipped=0;
+  lines.forEach(line=>{
+    const parts=line.split('|').map(p=>p.trim());
+    if(parts.length<3){skipped++;return;}
+    const[zh,py,en,cat]=parts;
+    if(!zh||!py||!en){skipped++;return;}
+    if(vocab.some(v=>v.zh===zh)){skipped++;return;}
+    customVocab.push({zh,py,en,cat:cat||'My words',tone:5});
+    added++;
+  });
+  saveCustomVocab();rebuildVocab();
+  const msg=document.getElementById('bulk-msg');
+  msg.textContent='✓ Added '+added+' word(s).'+(skipped?' Skipped '+skipped+' (duplicate or invalid).':'');
+  msg.className='feedback '+(added?'ok':'bad');
+  if(added)document.getElementById('bulk-text').value='';
+  updateCatDatalist();updateCustomCount();renderCustomWordsList();
+  refreshAllCatTabs();
+}
+
+// SCAN IMAGE (OCR)
+function loadTesseract(cb){
+  if(window.Tesseract){cb();return;}
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+  s.onload=cb;
+  s.onerror=()=>{document.getElementById('scan-status').textContent='Could not load the OCR engine. Check your internet connection.';};
+  document.head.appendChild(s);
+}
+function scanImage(e){
+  const file=e.target.files[0];
+  if(!file)return;
+  const status=document.getElementById('scan-status');
+  const results=document.getElementById('scan-results');
+  results.innerHTML='';
+  status.textContent='Loading OCR engine…';
+  loadTesseract(()=>{
+    status.textContent='Reading image…';
+    Tesseract.recognize(file,'chi_sim',{
+      logger:m=>{
+        if(m.status==='recognizing text'){status.textContent='Reading image… '+Math.round(m.progress*100)+'%';}
+      }
+    }).then(({data})=>{
+      const text=data.text||'';
+      const chars=[...new Set(text.replace(/[^一-鿿]/g,'').split(''))];
+      if(!chars.length){
+        status.textContent='No Chinese characters detected. Try a clearer image.';
+        return;
+      }
+      status.textContent='Detected '+chars.length+' character(s). Tap one to add pinyin & meaning:';
+      results.innerHTML='';
+      chars.forEach(c=>{
+        const span=document.createElement('span');
+        span.className='scan-detected-char';
+        span.textContent=c;
+        span.onclick=()=>{
+          setAddTab('single');
+          document.getElementById('add-zh').value=c;
+          document.getElementById('add-py').focus();
+          speak(c);
+        };
+        results.appendChild(span);
+      });
+    }).catch(err=>{
+      status.textContent='OCR failed: '+err.message;
+    });
+  });
+}
+
 // SETTINGS & REMINDERS
 function renderSettings(){
   const tog=document.getElementById('reminder-toggle');
@@ -1209,6 +1425,7 @@ function resetStats(){
 // INIT
 loadState();
 loadTags();
+loadCustomVocab();
 buildCatTabs('flash-cat-scroll',state.flashCat,()=>renderFlashCard());
 renderFlashCard();
 updateScoreDisplay();
